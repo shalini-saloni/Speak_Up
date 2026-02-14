@@ -1,3 +1,3 @@
 # ER Diagram
 
-![ER Diagram](./ER_Diagram.png)
+![ER Diagram](./ErDiagram.svg)
