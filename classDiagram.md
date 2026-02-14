@@ -1,3 +1,3 @@
 # Class Diagram
 
-![Class Diagram](./classDiagram.jpeg)
+![Class Diagram](./classDiagram.svg)
