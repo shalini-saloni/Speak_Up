@@ -1,3 +1,3 @@
 # ER Diagram
 
-![ER Diagram](./ErDiagram.svg)
+![ER Diagram](public/ErDiagram.svg)

@@ -1,3 +1,3 @@
 # Sequence Diagram
 
-![Sequence Diagram](./sequenceDiagram.png)
+![Sequence Diagram](public/sequenceDiagram.svg)

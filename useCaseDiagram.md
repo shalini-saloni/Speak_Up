@@ -1,3 +1,3 @@
 # UseCase Diagram
 
-![UseCase Diagram](./usecaseDiagram.png)
+![UseCase Diagram](public/useCaseDiagram.svg)

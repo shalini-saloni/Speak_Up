@@ -1,3 +1,3 @@
 # Class Diagram
 
-![Class Diagram](./classDiagram.svg)
+![Class Diagram](public/classDiagram.svg)
