@@ -12,15 +12,14 @@ export default function LandingPage() {
         className="relative isolate min-h-screen flex flex-col items-center justify-start px-6 pt-20 md:pt-24 pb-10 overflow-hidden"
         style={{
           backgroundImage: "url('/assets/hero3.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: '100% 50%',
+          backgroundSize: 'auto 100%',
+          backgroundPosition: 'right center',
           backgroundRepeat: 'no-repeat',
         }}
       >
         {/* Readability overlays */}
-        <div className="absolute inset-0 bg-black/20 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent z-10" />
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[900px] bg-primary/15 rounded-full blur-[140px] z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/10 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/55 to-transparent z-10" />
 
         <div className="w-full max-w-7xl relative z-20">
           <div className="max-w-3xl flex flex-col items-start gap-7">
