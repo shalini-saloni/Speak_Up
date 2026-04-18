@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 import { ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
 
