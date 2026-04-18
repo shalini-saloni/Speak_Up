@@ -109,6 +109,7 @@ router.get('/me/stats', requireAuth, async (req, res) => {
 
   const sessionsDone = await PracticeSession.count({ where: { userId: user.id } });
   const exercisesDone = await ExerciseCompletion.count({ where: { userId: user.id } });
+  console.log(`[Stats] User ${user.id}: sessions=${sessionsDone}, exercises=${exercisesDone}`);
   res.json({ sessionsDone, exercisesDone });
 });
 
@@ -426,6 +427,11 @@ router.post('/conversations/:id/finish', requireAuth, async (req, res) => {
   const convo = await Conversation.findByPk(req.params.id);
   if (!convo || convo.userId !== req.auth.sub) return res.status(404).json({ error: 'Conversation not found' });
 
+  // Avoid duplicate saves/XP if the user retries the finish call.
+  if (convo.status === 'completed' && convo.finalFeedback) {
+    return res.json({ conversationId: convo.id, feedback: convo.finalFeedback });
+  }
+
   try {
     const turns = await ConversationTurn.findAll({
       where: { conversationId: convo.id },
@@ -441,32 +447,69 @@ router.post('/conversations/:id/finish', requireAuth, async (req, res) => {
     const fillerMatches = fullText.match(/\b(um|uh|like|you know|actually|basically)\b/gi) || [];
     const fillerWordsCount = fillerMatches.length;
 
-    // Gemini: clarity/confidence + tips
-    const analysis = await analyzeSpeechWithGemini({
-      transcript: fullText,
-      durationSeconds: totalDuration,
+    // GEMINI ANALYSIS
+    let feedback;
+    try {
+      console.log(`[PracticeSession] Analyzing session for user ${req.auth.sub}...`);
+      const analysis = await analyzeSpeechWithGemini({
+        transcript: fullText,
+        durationSeconds: totalDuration,
+        sessionType: 'structured_topic',
+        topic: convo.topic,
+      });
+
+      feedback = {
+        metrics: {
+          fillerWordsCount,
+          wpm,
+          clarityScore: analysis.metrics.clarityScore,
+          confidenceScore: analysis.metrics.confidenceScore,
+        },
+        tips: analysis.tips,
+      };
+    } catch (err) {
+      console.error('[PracticeSession] AI analysis failed, using fallbacks:', err.message);
+      // Fallback feedback so the session is NOT lost.
+      feedback = {
+        metrics: {
+          fillerWordsCount,
+          wpm,
+          clarityScore: 70, // Neutral fallback
+          confidenceScore: 70,
+        },
+        tips: [
+          'Great job completing your session! Your detailed metrics will appear in future practice.',
+          'Focus on maintaining a steady pace and clear articulation.',
+          'Keep practicing consistent topics to see your progress trends.',
+        ],
+      };
+    }
+
+    // Persist session record first
+    const ps = await PracticeSession.create({
+      userId: req.auth.sub,
       sessionType: 'structured_topic',
-      topic: convo.topic,
+      topic: convo.topic || null,
+      durationSeconds: totalDuration,
+      transcript: fullText,
+      metrics: feedback.metrics,
+      aiFeedbackTips: feedback.tips,
     });
 
-    const feedback = {
-      metrics: {
-        fillerWordsCount,
-        wpm,
-        clarityScore: analysis.metrics.clarityScore,
-        confidenceScore: analysis.metrics.confidenceScore,
-      },
-      tips: analysis.tips,
-    };
+    console.log(`[PracticeSession] Created session ${ps.id} for user ${req.auth.sub}`);
 
+    // Update conversation status
     convo.status = 'completed';
     convo.finalFeedback = feedback;
     await convo.save();
+
+    // Award rewards
     await awardXpAndStreak(req.auth.sub, 30);
 
     res.json({ conversationId: convo.id, feedback });
   } catch (err) {
-    res.status(err.statusCode || 503).json({ error: err.message || 'Failed to generate feedback' });
+    console.error('[PracticeSession] Fatal error in finish route:', err);
+    res.status(err.statusCode || 500).json({ error: err.message || 'Failed to finish session' });
   }
 });
 
