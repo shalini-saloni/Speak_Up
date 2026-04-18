@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Flame, Star, Activity, User, LogOut, Award, Pencil } from 'lucide-react';
 import { api } from '../lib/api';
@@ -43,6 +43,8 @@ export default function Profile() {
     const arr = sessions.slice(0, 7).reverse();
     return arr.map((s) => Number(s?.metrics?.clarityScore || 0));
   }, [sessions]);
+  const resolvedSessionsDone = Math.max(Number(stats?.sessionsDone || 0), sessions.length);
+  const resolvedExercisesDone = Math.max(Number(stats?.exercisesDone || 0), Number(currentUser?.exercisesDone || 0));
 
   if (!currentUser) return <div className="p-8 text-center pt-24 min-h-screen">Please login.</div>;
 
@@ -130,11 +132,11 @@ export default function Profile() {
                </div>
                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
                  <div className="text-xs text-slate-400 font-bold uppercase">Sessions Done</div>
-                 <div className="text-2xl font-bold text-white mt-2">{stats.sessionsDone ?? sessions.length}</div>
+                <div className="text-2xl font-bold text-white mt-2">{resolvedSessionsDone}</div>
                </div>
                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
                  <div className="text-xs text-slate-400 font-bold uppercase">Exercises</div>
-                 <div className="text-2xl font-bold text-white mt-2">{stats.exercisesDone ?? 0}</div>
+                <div className="text-2xl font-bold text-white mt-2">{resolvedExercisesDone}</div>
                </div>
              </div>
              <div className="flex justify-end">
