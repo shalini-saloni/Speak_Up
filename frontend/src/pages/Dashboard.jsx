@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../context/authContext';
-import { Activity, Flame, Award, Mic, TrendingUp, Calendar, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import { Activity, Flame, Award, Mic, TrendingUp, Calendar, ChevronRight, BarChart3, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 
@@ -14,14 +15,18 @@ export default function Dashboard() {
     let ignore = false;
     async function load() {
       try {
-        setLoadingSessions(true);
-        if (!currentUser) return;
+        console.log('[Dashboard] Fetching sessions...');
         const { data } = await api.get('/practice-sessions');
         if (ignore) return;
+        console.log(`[Dashboard] Received ${data.length} sessions`);
         setSessions(Array.isArray(data) ? data : []);
+        
+        console.log('[Dashboard] Fetching stats...');
         const { data: s } = await api.get('/me/stats');
+        console.log('[Dashboard] Received stats:', s);
         if (!ignore) setStats(s);
-      } catch {
+      } catch (err) {
+        console.error('[Dashboard] Fetch failed:', err);
         if (ignore) return;
         setSessions([]);
       } finally {
@@ -34,10 +39,13 @@ export default function Dashboard() {
 
   const recent = useMemo(() => sessions.slice(0, 3), [sessions]);
   const sessionsCount = sessions.length;
+  const resolvedSessionsDone = Math.max(Number(stats?.sessionsDone || 0), sessionsCount);
+  const resolvedExercisesDone = Math.max(Number(stats?.exercisesDone || 0), Number(currentUser?.exercisesDone || 0));
+  const getClarityScore = (session) => Number(session?.metrics?.clarityScore || 0);
   const clarityAvg = useMemo(() => {
     const last10 = sessions.slice(0, 10);
     if (last10.length === 0) return 0;
-    const sum = last10.reduce((acc, s) => acc + Number(s?.metrics?.clarityScore || 0), 0);
+    const sum = last10.reduce((acc, s) => acc + getClarityScore(s), 0);
     return Math.round(sum / last10.length);
   }, [sessions]);
 
@@ -52,111 +60,131 @@ export default function Dashboard() {
       <div className="max-w-7xl w-full mx-auto space-y-6">
         
         {/* Header section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
-            <p className="text-slate-300 text-sm md:text-base">Ready to conquer your fear of public speaking today?</p>
-          </div>
-          <Link to="/practice" className="bg-primary hover:bg-primary-light text-background px-6 py-3 rounded-2xl font-bold transition flex items-center gap-2 shadow-lg shadow-primary/25">
-            <Mic className="w-5 h-5" />
-            New Practice Session
-          </Link>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Hello, {currentUser.name.split(' ')[0]}!</h1>
+            <p className="text-slate-400 text-lg">Your journey to confident speaking continues today.</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <Link to="/practice" className="bg-primary hover:bg-primary-light text-white px-8 py-4 rounded-2xl font-bold transition flex items-center gap-2 shadow-xl shadow-primary/20 group">
+              <Mic className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              New Practice Session
+            </Link>
+          </motion.div>
         </div>
+
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="glass-panel p-5 flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <span className="text-slate-400 font-medium">Daily Streak</span>
-              <div className="w-10 h-10 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
-                <Flame className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-white">{currentUser.streak} Days</span>
-            <span className="text-xs text-slate-400">Updated in real time from your activity.</span>
-          </div>
-          
-          <div className="glass-panel p-5 flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <span className="text-slate-400 font-medium">Total XP</span>
-              <div className="w-10 h-10 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
-                <Award className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-white">{currentUser.xp}</span>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full mt-1">
-               <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, (currentUser.xp % 100) || 10)}%` }}></div>
-            </div>
-            <span className="text-xs text-slate-400">Earn XP from practice, exercises, and forum.</span>
-          </div>
-
-          <div className="glass-panel p-5 flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <span className="text-slate-400 font-medium">Sessions Done</span>
-              <div className="w-10 h-10 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
-                <Activity className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-white">{stats.sessionsDone ?? sessionsCount}</span>
-            <span className="text-xs text-slate-400">Total completed sessions.</span>
-          </div>
-
-          <div className="glass-panel p-5 flex flex-col gap-2">
-            <div className="flex justify-between items-start">
-              <span className="text-slate-400 font-medium">Exercises</span>
-              <div className="w-10 h-10 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-            </div>
-            <span className="text-2xl font-bold text-white">{stats.exercisesDone ?? 0}</span>
-            <span className="text-xs text-slate-400 flex items-center gap-1">Total exercises completed.</span>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Daily Streak', value: `${currentUser.streak} Days`, icon: Flame, color: 'text-orange-400', sub: 'Activity rank' },
+            { label: 'Total XP', value: currentUser.xp, icon: Award, color: 'text-amber-400', progress: Math.min(100, (currentUser.xp % 100) || 10) },
+            { label: 'Sessions', value: resolvedSessionsDone, icon: BarChart3, color: 'text-blue-400', sub: 'Across all topics' },
+            { label: 'Exercises', value: resolvedExercisesDone, icon: Activity, color: 'text-green-400', sub: 'Skills mastered' }
+          ].map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="glass-card p-6 border border-white/5 hover:border-white/10 transition-colors group"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">{stat.label}</span>
+                  <div className={`w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
+                {stat.progress ? (
+                   <div className="w-full h-1.5 bg-white/5 rounded-full mt-3 overflow-hidden">
+                     <motion.div 
+                       initial={{ width: 0 }}
+                       animate={{ width: `${stat.progress}%` }}
+                       className="h-full bg-amber-400" 
+                      />
+                   </div>
+                ) : (
+                  <span className="text-[11px] text-slate-500 font-medium">{stat.sub}</span>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
 
+
         {/* Single-page compact content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 space-y-5">
-            <div className="glass-panel p-5">
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <h3 className="text-lg font-bold text-white">Speech Score Progress</h3>
-                <div className="text-sm text-slate-400">Avg clarity: <span className="text-primary font-bold">{clarityAvg}%</span></div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:col-span-2 space-y-6"
+          >
+            <div className="glass-card p-8">
+              <div className="flex items-center justify-between gap-4 mb-8">
+                <div>
+                  <h3 className="text-xl font-bold text-white">Speech Clarity Trend</h3>
+                  <p className="text-sm text-slate-500 mt-1">Track your progress over the last 10 sessions.</p>
+                </div>
+                <div className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
+                  <span className="text-xs font-bold text-primary uppercase">Average: </span>
+                  <span className="text-lg font-bold text-white">{clarityAvg}%</span>
+                </div>
               </div>
               {sessions.length === 0 ? (
-                <div className="h-32 w-full rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-sm text-slate-400">
-                  Complete your first Practice session to see your progress chart.
+                <div className="h-48 w-full rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center gap-3 text-slate-500">
+                  <BarChart3 className="w-8 h-8 opacity-20" />
+                  <p className="text-sm font-medium">Complete your first session to see analytics</p>
                 </div>
               ) : (
-                <div className="h-32 w-full">
+                <div className="h-48 w-full">
+                  {/* ... chart rendering same as before but inside better card ... */}
                   {(() => {
-                    const data = sessions.slice(0, 7).reverse().map((s) => Number(s?.metrics?.clarityScore || 0));
-                    const w = 600;
-                    const h = 130;
-                    const pad = 12;
+                    const data = sessions.slice(0, 10).reverse().map((s) => getClarityScore(s));
+                    const w = 800;
+                    const h = 200;
+                    const pad = 20;
                     const stepX = (w - pad * 2) / Math.max(1, data.length - 1);
-                    const minV = Math.max(0, Math.min(...data) - 10);
-                    const maxV = Math.min(100, Math.max(...data) + 10);
-                    const toY = (v) => pad + (h - pad * 2) * (1 - (v - minV) / Math.max(1, (maxV - minV)));
+                    const minV = 0;
+                    const maxV = 100;
+                    const toY = (v) => pad + (h - pad * 2) * (1 - (v - minV) / (maxV - minV));
                     const pts = data.map((v, i) => `${pad + i * stepX},${toY(v)}`).join(' ');
                     return (
-                      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full">
+                      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full overflow-visible">
                         <defs>
-                          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="rgba(249,115,22,0.55)" />
-                            <stop offset="60%" stopColor="rgba(249,115,22,0.95)" />
-                            <stop offset="100%" stopColor="rgba(245,158,11,0.95)" />
+                          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(249,115,22,0.2)" />
+                            <stop offset="100%" stopColor="rgba(249,115,22,0)" />
                           </linearGradient>
                         </defs>
-                        <g opacity="0.45">
-                          {[20, 50, 80, 110].map((yy) => (
-                            <line key={yy} x1="0" y1={yy} x2={w} y2={yy} stroke="rgba(255,255,255,0.08)" strokeWidth="2" />
-                          ))}
-                        </g>
-                        <polyline points={pts} fill="none" stroke="url(#lineGrad)" strokeWidth="5" strokeLinejoin="round" strokeLinecap="round" />
+                        <path d={`M ${pad},${h} ${pts} L ${pad + (data.length - 1) * stepX},${h} Z`} fill="url(#areaGrad)" />
+                        <motion.polyline 
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          points={pts} 
+                          fill="none" 
+                          stroke="#f97316" 
+                          strokeWidth="4" 
+                          strokeLinejoin="round" 
+                          strokeLinecap="round" 
+                        />
                         {data.map((v, i) => (
-                          <g key={i}>
-                            <circle cx={pad + i * stepX} cy={toY(v)} r="6" fill="#f97316" />
-                            <circle cx={pad + i * stepX} cy={toY(v)} r="14" fill="rgba(249,115,22,0.18)" />
-                          </g>
+                          <motion.circle 
+                            key={i} 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.8 + i * 0.05 }}
+                            cx={pad + i * stepX} cy={toY(v)} r="6" fill="#f97316" stroke="#0f172a" strokeWidth="2" 
+                          />
                         ))}
                       </svg>
                     );
@@ -164,6 +192,7 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+
 
             {/* Recommended Exercise */}
             <div className="bg-gradient-to-r from-black to-surface rounded-2xl border border-white/10 p-6 flex flex-col md:flex-row items-center gap-5 shadow-xl relative overflow-hidden">
@@ -180,9 +209,10 @@ export default function Dashboard() {
                   Start Timer <ChevronRight className="w-4 h-4" />
                </Link>
             </div>
-          </div>
+          </motion.div>
 
           {/* Sidebar */}
+
           <div className="space-y-8">
             <div className="glass-panel p-5">
               <h3 className="font-bold text-white mb-3 flex items-center gap-2">
@@ -199,29 +229,47 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="glass-panel p-5">
-              <h3 className="text-lg font-bold text-white mb-3">Recent Practice Sessions</h3>
-              {loadingSessions && <div className="text-sm text-slate-400">Loading…</div>}
-              {!loadingSessions && recent.length === 0 && (
-                <div className="text-sm text-slate-400 bg-white/5 border border-white/10 rounded-xl p-4">
-                  No sessions yet. Start one from <Link to="/practice" className="text-primary hover:underline">Practice</Link>.
+           {/* Recent Sessions */}
+            <div className="glass-card p-6">
+              <h3 className="text-xl font-bold text-white mb-6">Recent History</h3>
+              {loadingSessions && (
+                <div className="flex flex-col gap-4">
+                   {[1,2,3].map(i => <div key={i} className="h-16 bg-white/5 animate-pulse rounded-xl" />)}
                 </div>
               )}
-              <div className="space-y-3">
+              {!loadingSessions && recent.length === 0 && (
+                <div className="text-sm text-slate-500 bg-white/[0.02] border border-white/5 rounded-2xl p-6 text-center">
+                  You haven't practiced yet. <Link to="/practice" className="text-primary font-bold hover:underline">Start today!</Link>
+                </div>
+              )}
+              <div className="space-y-4">
                 {!loadingSessions && recent.map((sess) => {
-                  const score = Number(sess?.metrics?.clarityScore || 0);
+                  const score = getClarityScore(sess);
                   return (
-                    <div key={sess.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
-                      <div>
-                        <div className="text-white font-bold text-sm">{sess.topic || 'Practice session'}</div>
-                        <div className="text-xs text-slate-400">{new Date(sess.createdAt).toLocaleDateString()}</div>
+                    <motion.div 
+                      whileHover={{ x: 5 }}
+                      key={sess.id} 
+                      className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+                            <BarChart3 className="w-5 h-5" />
+                         </div>
+                         <div>
+                            <div className="text-white font-bold">{sess.topic || 'General Practice'}</div>
+                            <div className="text-xs text-secondary-text text-slate-500">{new Date(sess.createdAt).toLocaleDateString()}</div>
+                         </div>
                       </div>
-                      <div className="text-primary font-bold">{score}%</div>
-                    </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-primary font-black">{score}%</div>
+                        <div className="text-[10px] text-slate-600 uppercase font-black">Clarity</div>
+                      </div>
+                    </motion.div>
                   );
                 })}
               </div>
             </div>
+
 
           </div>
         </div>
