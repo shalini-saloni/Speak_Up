@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronLeft, Send } from 'lucide-react';
 import { api } from '../lib/api';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function PostDetail() {
   const { id } = useParams();
