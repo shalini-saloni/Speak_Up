@@ -23,7 +23,7 @@ SpeakUp is a premium, AI-powered platform designed to help individuals overcome 
 - **Sequelize ORM** with **SQLite** for reliable data persistence
 - **Google GenAI (Gemini)** for intelligent speech analysis
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18+)

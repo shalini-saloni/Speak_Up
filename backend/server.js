@@ -10,21 +10,30 @@ const app = express();
 app.use(
   cors({
     origin: (origin, cb) => {
-      // Allow non-browser clients (curl/postman) and same-origin requests
+      // Allow non-browser clients (curl/postman)
       if (!origin) return cb(null, true);
 
-      const allow = [
-        /^http:\/\/localhost:\d+$/i,
-        /^http:\/\/127\.0\.0\.1:\d+$/i,
+      const whitelist = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'https://speak-up-kappa.vercel.app'
       ];
 
       if (process.env.CORS_ORIGIN) {
-        const extra = process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean);
-        if (extra.includes(origin)) return cb(null, true);
+        const extra = process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean);
+        whitelist.push(...extra);
       }
 
-      if (allow.some((re) => re.test(origin))) return cb(null, true);
-      return cb(new Error(`CORS blocked for origin: ${origin}`));
+      const isAllowed = whitelist.some(item => {
+        if (item.includes('*')) {
+          const pattern = new RegExp(`^${item.replace(/\./g, '\\.').replace(/\*/g, '.*')}$`, 'i');
+          return pattern.test(origin);
+        }
+        return item === origin;
+      });
+
+      if (isAllowed) return cb(null, true);
+      return cb(null, false); // Reject without throwing a 500
     },
     credentials: true,
   })
