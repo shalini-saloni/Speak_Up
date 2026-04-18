@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronLeft, Play, Square, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '../lib/api';
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function ExerciseDetail() {
   const Motion = motion;
@@ -16,6 +16,7 @@ export default function ExerciseDetail() {
   const [phase, setPhase] = useState('Inhale'); // Inhale, Hold, Exhale, Hold
   const [timeLeft, setTimeLeft] = useState(4); // 4-4-4-4 box breathing
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [markingDone, setMarkingDone] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -90,7 +91,22 @@ export default function ExerciseDetail() {
     setIsActive(!isActive);
   };
 
-  const completeExercise = () => {
+  const completeExercise = async () => {
+    if (!currentUser || markingDone) {
+      setIsActive(false);
+      setSessionCompleted(true);
+      return;
+    }
+    setMarkingDone(true);
+    setError('');
+    try {
+      await api.post(`/exercises/${id}/complete`);
+      await refreshMe();
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to mark completed');
+    } finally {
+      setMarkingDone(false);
+    }
     setIsActive(false);
     setSessionCompleted(true);
   };
@@ -203,7 +219,7 @@ export default function ExerciseDetail() {
                   onClick={completeExercise}
                   className="bg-surface hover:bg-white/10 px-6 py-4 border border-white/10 rounded-full font-bold transition"
                 >
-                  Finish
+                  {markingDone ? 'Saving...' : 'Finish'}
                 </button>
               )}
             </div>
