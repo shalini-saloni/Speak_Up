@@ -18,9 +18,28 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-surface/70 backdrop-blur-md border border-white/10 shadow-xl rounded-2xl;
+    @apply bg-slate-900/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.37)] rounded-2xl;
+  }
+  .glass-panel-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:border-white/25 hover:bg-white/5;
+  }
+  .glass-navbar {
+    @apply sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)] py-3;
+  }
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-xl rounded-3xl overflow-hidden;
   }
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-amber-300;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
+
+
+
