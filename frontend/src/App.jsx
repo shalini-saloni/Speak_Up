@@ -28,7 +28,7 @@ function PublicOnly({ children }) {
   if (!bootstrapped) {
     return <div className="min-h-screen bg-background text-slate-200 flex items-center justify-center">Loading...</div>;
   }
-  if (currentUser) return <Navigate to="/dashboard" replace />;
+  if (currentUser) return <Navigate to="/landing" replace />;
   return children;
 }
 
@@ -55,7 +55,7 @@ function App() {
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/admin" element={<RequireAuth><AdminPanel /></RequireAuth>} />
 
-          <Route path="*" element={<Navigate to={currentUser ? "/dashboard" : "/login"} replace />} />
+          <Route path="*" element={<Navigate to={currentUser ? "/landing" : "/login"} replace />} />
         </Routes>
       </div>
     </Router>

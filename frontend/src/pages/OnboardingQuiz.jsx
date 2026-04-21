@@ -23,7 +23,7 @@ export default function OnboardingQuiz() {
           fearLevel === 'moderate' ? 'intermediate' :
           'advanced',
       });
-      navigate('/dashboard');
+      navigate('/landing');
     } catch (err) {
       setError(err?.response?.data?.error || 'Failed to save onboarding');
     } finally {

@@ -72,4 +72,4 @@ start();
 
 // Some environments aggressively tear down idle processes; this keeps the
 // event loop alive while the HTTP server is running.
-setInterval(() => {}, 60_000);
+setInterval(() => { }, 60_000);

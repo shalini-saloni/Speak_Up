@@ -17,7 +17,7 @@ export function Login() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/landing');
     } catch (err) {
       setError(err?.response?.data?.error || 'Login failed');
     } finally {
@@ -94,7 +94,7 @@ export function Signup() {
     setSubmitting(true);
     try {
       await signup(name, email, password);
-      navigate('/onboarding');
+      navigate('/landing');
     } catch (err) {
       setError(err?.response?.data?.error || 'Signup failed');
     } finally {
