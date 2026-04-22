@@ -6,7 +6,24 @@ class BaseController {
   }
 
   sendSuccess(res, data, statusCode = 200) {
-    return res.status(statusCode).json(data);
+    const serialized = this.serialize(data);
+    return res.status(statusCode).json(serialized);
+  }
+
+  serialize(data) {
+    if (!data) return data;
+    if (Array.isArray(data)) {
+      return data.map(item => this.serialize(item));
+    }
+    if (typeof data === 'object' && data !== null) {
+      // If it's a Mongoose document, we can convert to JSON which triggers our transforms
+      let obj = typeof data.toJSON === 'function' ? data.toJSON() : { ...data };
+      if (obj._id && !obj.id) {
+        obj.id = obj._id.toString();
+      }
+      return obj;
+    }
+    return data;
   }
 
   sendError(res, message, statusCode = 500) {
