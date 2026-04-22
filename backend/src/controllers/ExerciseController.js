@@ -1,12 +1,11 @@
 const BaseController = require('./BaseController');
-const { Exercise, ExerciseCompletion } = require('../models');
+const { Exercise, ExerciseCompletion } = require('../../models');
 const UserService = require('../services/UserService');
-const { Op } = require('sequelize');
 
 class ExerciseController extends BaseController {
   async list(req, res) {
     try {
-      const items = await Exercise.findAll({ order: [['title', 'ASC']] });
+      const items = await Exercise.find().sort({ title: 1 });
       return this.sendSuccess(res, items);
     } catch (err) {
       return this.handleError(res, err);
@@ -15,7 +14,7 @@ class ExerciseController extends BaseController {
 
   async details(req, res) {
     try {
-      const ex = await Exercise.findByPk(req.params.id);
+      const ex = await Exercise.findById(req.params.id);
       if (!ex) return this.sendError(res, 'Exercise not found', 404);
       return this.sendSuccess(res, ex);
     } catch (err) {
@@ -25,7 +24,7 @@ class ExerciseController extends BaseController {
 
   async complete(req, res) {
     try {
-      const ex = await Exercise.findByPk(req.params.id);
+      const ex = await Exercise.findById(req.params.id);
       if (!ex) return this.sendError(res, 'Exercise not found', 404);
 
       const now = new Date();
@@ -35,15 +34,17 @@ class ExerciseController extends BaseController {
       tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
       const existingToday = await ExerciseCompletion.findOne({
-        where: {
-          userId: req.auth.sub,
-          exerciseId: ex.id,
-          completedAt: { [Op.gte]: todayStart, [Op.lt]: tomorrowStart },
-        },
+        userId: req.auth.sub,
+        exerciseId: ex._id,
+        completedAt: { $gte: todayStart, $lt: tomorrowStart },
       });
 
       if (!existingToday) {
-        await ExerciseCompletion.create({ userId: req.auth.sub, exerciseId: ex.id, completedAt: now });
+        await ExerciseCompletion.create({
+          userId: req.auth.sub,
+          exerciseId: ex._id,
+          completedAt: now
+        });
         await UserService.awardXpAndStreak(req.auth.sub, 10);
       } else {
         await UserService.awardXpAndStreak(req.auth.sub, 0);
@@ -53,13 +54,12 @@ class ExerciseController extends BaseController {
       return this.sendSuccess(res, {
         completed: true,
         user: {
-          id: user.id,
+          id: user._id,
           name: user.name,
           email: user.email,
           fearLevel: user.fearLevel,
           xp: user.xp,
           streak: user.streak,
-          avatarSvg: user.avatarSvg,
           avatarUrl: user.avatarUrl
         }
       });
