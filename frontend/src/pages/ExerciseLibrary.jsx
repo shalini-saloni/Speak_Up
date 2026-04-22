@@ -181,14 +181,14 @@ export default function ExerciseLibrary() {
               return (
                 <motion.div
                   layout
-                  key={ex.id}
+                  key={ex.id || ex._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: idx * 0.05 }}
                 >
                   <Link 
-                    to={`/exercises/${ex.id}`} 
+                    to={`/exercises/${ex.id || ex._id}`} 
                     className="glass-card glass-panel-hover p-10 flex flex-col justify-between group min-h-[400px] relative overflow-hidden"
                   >
                     {/* Background Artwork */}
