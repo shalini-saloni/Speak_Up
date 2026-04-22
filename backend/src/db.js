@@ -1,24 +1,15 @@
-const path = require('path');
-const { Sequelize } = require('sequelize');
+const mongoose = require('mongoose');
 
-function createSequelize() {
-  const databaseUrl = process.env.DATABASE_URL;
-
-  if (databaseUrl) {
-    return new Sequelize(databaseUrl, {
-      logging: false,
-    });
+async function connectDB() {
+  try {
+    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/speakup';
+    await mongoose.connect(uri);
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('Failed to connect to MongoDB', err);
+    process.exit(1);
   }
-
-  const storage = process.env.SQLITE_PATH || path.join(process.cwd(), 'data.sqlite');
-  return new Sequelize({
-    dialect: 'sqlite',
-    storage,
-    logging: false,
-  });
 }
 
-const sequelize = createSequelize();
-
-module.exports = { sequelize };
+module.exports = { connectDB };
 
