@@ -8,29 +8,31 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 class AuthService extends BaseService {
   async signup(name, email, password) {
-    const existing = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
       const error = new Error('Email already in use');
       error.statusCode = 409;
       throw error;
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: passwordHash });
+    const passwordHash = await bcrypt.hash(password.trim(), 10);
+    const user = await User.create({ name, email: cleanEmail, password: passwordHash });
     
     const token = this.signToken({ sub: user._id });
     return { token, user: this.formatUser(user) };
   }
 
   async login(email, password) {
-    const user = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       const error = new Error('Invalid credentials');
       error.statusCode = 401;
       throw error;
     }
 
-    const ok = await bcrypt.compare(password, user.password);
+    const ok = await bcrypt.compare(password.trim(), user.password);
     if (!ok) {
       const error = new Error('Invalid credentials');
       error.statusCode = 401;
