@@ -1,4 +1,6 @@
-const { Exercise, ForumPost, User } = require('./models');
+const Exercise = require('../models/Exercise');
+const ForumPost = require('../models/ForumPost');
+const User = require('../models/User');
 
 async function seedIfEmpty() {
   const desiredExercises = [
@@ -80,18 +82,16 @@ async function seedIfEmpty() {
   ];
 
   for (const ex of desiredExercises) {
-    // Keep user's existing customizations; only insert if missing.
-    const existing = await Exercise.findOne({ where: { title: ex.title } });
+    const existing = await Exercise.findOne({ title: ex.title });
     if (!existing) await Exercise.create(ex);
   }
 
-  // Create a pinned post (owned by first user if exists; otherwise leave for later)
-  const postCount = await ForumPost.count();
+  const postCount = await ForumPost.countDocuments();
   if (postCount === 0) {
     const anyUser = await User.findOne();
     if (anyUser) {
       await ForumPost.create({
-        userId: anyUser.id,
+        userId: anyUser._id,
         title: 'Weekly Challenge: 30-second introduction',
         body: 'Record a 30-second introduction of yourself and share your biggest win this week. Keep it simple: name, role, and one thing you’re proud of.',
         tags: ['Challenge', 'Weekly'],
