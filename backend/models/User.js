@@ -8,6 +8,16 @@ const userSchema = new mongoose.Schema({
   xp: { type: Number, default: 0 },
   streak: { type: Number, default: 0 },
   lastActive: { type: Date, default: Date.now }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { 
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id;
+      return ret;
+    }
+  },
+  toObject: { virtuals: true }
+});
 
 module.exports = mongoose.model('User', userSchema);
