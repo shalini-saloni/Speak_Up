@@ -2,7 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const { sequelize, User } = require('./src/models');
+const { connectDB } = require('./src/db');
+const User = require('./models/User'); // Import Mongoose User model for initial checks if needed
 const { router } = require('./src/routes');
 const { seedIfEmpty } = require('./src/seed');
 
@@ -10,7 +11,6 @@ const app = express();
 app.use(
   cors({
     origin: (origin, cb) => {
-      // Allow non-browser clients (curl/postman)
       if (!origin) return cb(null, true);
 
       const whitelist = [
@@ -33,27 +33,24 @@ app.use(
       });
 
       if (isAllowed) return cb(null, true);
-      return cb(null, false); // Reject without throwing a 500
+      return cb(null, false);
     },
     credentials: true,
   })
 );
-// Audio transcription uses base64 payloads; increase limit to avoid 413.
-app.use(express.json({ limit: '25mb' })); // To parse JSON bodies
 
-const PORT = process.env.PORT || 5001; // Vite runs on 5173, backend on 5001
+app.use(express.json({ limit: '25mb' }));
+
+const PORT = process.env.PORT || 5001;
 app.use('/api', router);
 
-// Start Server
 async function start() {
   try {
-    await sequelize.authenticate();
-    await sequelize.sync({ alter: true });
+    await connectDB();
 
-    // Ensure there is at least one user for seeded pinned post ownership later
-    const count = await User.count();
+    const count = await User.countDocuments();
     if (count === 0 && process.env.SEED_DEMO_USER === 'true') {
-      // Intentionally left blank: demo user is created via signup endpoint
+      // Logic for demo user can be added here if needed
     }
 
     await seedIfEmpty();
@@ -70,6 +67,4 @@ async function start() {
 
 start();
 
-// Some environments aggressively tear down idle processes; this keeps the
-// event loop alive while the HTTP server is running.
 setInterval(() => { }, 60_000);
