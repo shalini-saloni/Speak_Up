@@ -99,14 +99,18 @@ export default function PracticeSession() {
   };
 
   const beginTopic = async (topicId) => {
-    setError('');
-    setIsAdvancing(false);
-    setSelectedTopic(topicId);
-    const { data } = await api.post('/conversations', { topicId });
-    setConversationId(data.conversationId);
-    setCoachQuestion(data.question);
-    setTurnCount(0);
-    setStage('qa');
+    try {
+      setError('');
+      setIsAdvancing(false);
+      setSelectedTopic(topicId);
+      const { data } = await api.post('/conversations', { topicId });
+      setConversationId(data.conversationId);
+      setCoachQuestion(data.question);
+      setTurnCount(0);
+      setStage('qa');
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Failed to start practice session');
+    }
   };
 
   const startAnswer = async () => {
@@ -345,14 +349,14 @@ export default function PracticeSession() {
 
                   return (
                     <motion.div
-                      key={topic.id}
+                      key={topic.id || topic._id}
                       style={{ 
                         zIndex: topics.length - i,
                         transformOrigin: "top center"
                       }}
                       drag={isTop ? "x" : false}
                       dragConstraints={{ left: 0, right: 0 }}
-                      onDragEnd={(e, info) => isTop && handleDragEnd(e, info, topic.id)}
+                      onDragEnd={(e, info) => isTop && handleDragEnd(e, info, topic.id || topic._id)}
                       initial={{ scale: 0.8, y: 50, opacity: 0 }}
                       animate={{ 
                         scale: 1 - i * 0.06, 
@@ -382,7 +386,7 @@ export default function PracticeSession() {
                       
                       <div className="mt-8 flex items-center justify-between">
                         <button
-                          onClick={() => beginTopic(topic.id)}
+                          onClick={() => beginTopic(topic.id || topic._id)}
                           className="flex-grow bg-primary hover:bg-primary-light text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-3 active:scale-95"
                         >
                           <Play className="w-5 h-5 fill-current" />
