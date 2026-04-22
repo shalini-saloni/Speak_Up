@@ -5,6 +5,16 @@ const conversationSchema = new mongoose.Schema({
   topic: { type: String, required: true },
   status: { type: String, enum: ['active', 'completed'], default: 'active' },
   finalFeedback: { type: mongoose.Schema.Types.Mixed }, // JSON storage
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { 
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id;
+      return ret;
+    }
+  },
+  toObject: { virtuals: true }
+});
 
 module.exports = mongoose.model('Conversation', conversationSchema);
