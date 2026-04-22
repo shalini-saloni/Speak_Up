@@ -183,7 +183,7 @@ export default function ForumFeed() {
            
            {/* Pinned Post */}
            {pinned && (
-           <Link to={`/forum/${pinned.id}`} className="block relative overflow-hidden bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 hover:bg-primary/10 transition group">
+           <Link to={`/forum/${pinned.id || pinned._id}`} className="block relative overflow-hidden bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-2xl p-6 hover:bg-primary/10 transition group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl"></div>
               <div className="flex items-center gap-3 mb-4">
                  <Pin className="w-4 h-4 text-primary fill-current" />
@@ -228,13 +228,13 @@ export default function ForumFeed() {
                ) : (
                 <motion.div
                   layout
-                  key={post.id}
+                  key={post.id || post._id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
                   <Link 
-                    to={`/forum/${post.id}`} 
+                    to={`/forum/${post.id || post._id}`} 
                     className="block glass-card glass-panel-hover p-8 group relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
