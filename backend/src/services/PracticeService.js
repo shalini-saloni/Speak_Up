@@ -62,7 +62,7 @@ class PracticeService extends BaseService {
     const question = firstQuestionMap[topicId] || 'Introduce yourself in 30 seconds.';
     await ConversationTurn.create({ conversationId: convo._id, role: 'ai', text: question });
 
-    return { conversationId: convo._id, question };
+    return { conversationId: convo._id.toString(), question };
   }
 
   async addConversationTurn(userId, conversationId, { text, durationSeconds }) {
