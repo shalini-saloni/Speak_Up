@@ -248,7 +248,7 @@ export default function Dashboard() {
                   return (
                     <motion.div 
                       whileHover={{ x: 5 }}
-                      key={sess.id} 
+                      key={sess.id || sess._id} 
                       className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-4">
