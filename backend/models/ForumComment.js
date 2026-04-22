@@ -5,6 +5,20 @@ const forumCommentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   body: { type: String, required: true },
   upvotes: { type: Number, default: 0 },
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: { 
+    virtuals: true,
+    transform: (doc, ret) => {
+      ret.id = ret._id;
+      return ret;
+    }
+  },
+  toObject: { virtuals: true }
+});
+
+forumCommentSchema.virtual('User').get(function() {
+  return this.userId;
+});
 
 module.exports = mongoose.model('ForumComment', forumCommentSchema);
