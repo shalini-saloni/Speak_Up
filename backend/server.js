@@ -48,11 +48,6 @@ async function start() {
   try {
     await connectDB();
 
-    const count = await User.countDocuments();
-    if (count === 0 && process.env.SEED_DEMO_USER === 'true') {
-      // Logic for demo user can be added here if needed
-    }
-
     await seedIfEmpty();
 
     const server = app.listen(PORT, () => {
