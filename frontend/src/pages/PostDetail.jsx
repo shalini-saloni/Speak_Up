@@ -91,7 +91,7 @@ export default function PostDetail() {
           <div className="font-bold text-white mb-4">Comments</div>
           <div className="space-y-4">
             {comments.map((c) => (
-              <div key={c.id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
+              <div key={c.id || c._id} className="bg-white/5 border border-white/10 rounded-2xl p-4">
                 <div className="text-xs text-slate-400">
                   {c?.User?.name || 'User'} • {c?.createdAt ? new Date(c.createdAt).toLocaleString() : ''}
                 </div>
