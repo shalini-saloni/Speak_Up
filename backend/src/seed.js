@@ -1,8 +1,24 @@
 const Exercise = require('../models/Exercise');
 const ForumPost = require('../models/ForumPost');
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 async function seedIfEmpty() {
+  const demoEmail = 'test@gmail.com';
+  const existingUser = await User.findOne({ email: demoEmail });
+  if (!existingUser) {
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    await User.create({
+      name: 'Test User',
+      email: demoEmail,
+      password: hashedPassword,
+      fearLevel: 'beginner',
+      xp: 100,
+      streak: 5
+    });
+    console.log(`[Seed] Created demo user: ${demoEmail}`);
+  }
+
   const desiredExercises = [
     {
       title: 'Box Breathing',
